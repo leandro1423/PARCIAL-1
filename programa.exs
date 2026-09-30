@@ -1,5 +1,12 @@
 defmodule Programa do
- 
+  @moduledoc """
+  Punto de entrada de la aplicación.
+
+  Este módulo carga los datos base, valida los pesajes, muestra los reportes y permite
+  consultar el desprendible de un recolector en particular.
+  """
+
+  @doc "Ejecuta el flujo principal del programa."
   def main do
     # 1. Cargar los datos crudos
     recolectores = Datos.recolectores()
@@ -36,7 +43,11 @@ defmodule Programa do
   end
 
   defp agregar_pesaje_adicional(recolectores, lotes, pesajes_validos, pesajes_rechazados) do
-    linea = Util.leer("Ingrese un pesaje adicional (recolector;lote;dia;kilos;verdes) o Enter para omitir: ", :string)
+    linea =
+      Util.leer(
+        "Ingrese un pesaje adicional (recolector;lote;dia;kilos;verdes) o Enter para omitir: ",
+        :string
+      )
 
     if linea == "" do
       Util.imprimir_mensaje("No se agregó ningún pesaje.")

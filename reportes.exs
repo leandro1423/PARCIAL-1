@@ -1,12 +1,29 @@
 defmodule Reportes do
- 
+  @moduledoc """
+  Genera los reportes y resúmenes de la operación agrícola.
+
+  El módulo centraliza el texto legible que se muestra en consola para cada uno de los
+  indicadores del parcial: kilos por día, mejor recolector, liquidación y desprendibles.
+  """
+
+  @doc """
+  Reporte R3: compara la producción diaria con la meta establecida.
+
+  Muestra por cada día si se cumplió o no la meta de 400 kg y responde si la meta se
+  cumplió todos los días y si al menos hubo un día exitoso.
+  """
   def r3(pesajes_validos) do
     kilos_por_dia = Liquidacion.kilos_por_dia_finca(pesajes_validos)
 
     lineas =
       for dia <- 1..6 do
         kilos = kilos_por_dia[dia]
-        estado = if Liquidacion.cumple_meta_diaria?(kilos), do: "cumplió la meta", else: "no cumplió la meta"
+
+        estado =
+          if Liquidacion.cumple_meta_diaria?(kilos),
+            do: "cumplió la meta",
+            else: "no cumplió la meta"
+
         "Día #{dia}: #{formatear_kilos(kilos)} kg -> #{estado}"
       end
       |> Enum.join("\n")
@@ -24,6 +41,9 @@ defmodule Reportes do
     """
   end
 
+  @doc """
+  Reporte R5: muestra el mejor recolector de cada día y resume quién ganó más días.
+  """
   def r5(pesajes_validos, recolectores) do
     mejores = Liquidacion.mejores_por_dia(pesajes_validos)
 
@@ -59,6 +79,7 @@ defmodule Reportes do
     """
   end
 
+  @doc "Construye el desprendible de pago de un recolector específico."
   def desprendible(recolector, pesajes_validos) do
     pesajes_del_recolector = Enum.filter(pesajes_validos, &(&1.recolector == recolector.codigo))
     detalle = Liquidacion.detalle_diario_recolector(pesajes_del_recolector)
@@ -83,26 +104,32 @@ defmodule Reportes do
     """
   end
 
+  @doc "Reporte R1: deja el espacio para mostrar los pesajes rechazados."
   def r1(_pesajes_rechazados) do
     "R1. Pesajes rechazados\n(pendiente — lo hace el compañero de Validacion/Reportes)"
   end
 
+  @doc "Reporte R2: deja un placeholder para el resumen de kilos por lote."
   def r2(_pesajes_validos, _lotes) do
     "R2. Kilos por lote\n(pendiente)"
   end
 
+  @doc "Reporte R4: placeholder para la liquidación total de la semana."
   def r4(_liquidaciones) do
     "R4. Liquidación de la semana\n(pendiente)"
   end
 
+  @doc "Reporte R6: placeholder para la mejor calidad según promedio ponderado."
   def r6(_pesajes_validos) do
     "R6. Mejor calidad\n(pendiente — usa Util.promedio_ponderado)"
   end
 
+  @doc "Reporte R7: placeholder para los totales de la semana."
   def r7(_liquidaciones) do
     "R7. Totales de la semana\n(pendiente)"
   end
 
+  @doc "Reporte R8: placeholder para encontrar recolectores en todos los lotes."
   def r8(_pesajes_validos, _lotes) do
     "R8. Recolectores que trabajaron en todos los lotes\n(pendiente — usa Util.contiene_todos?/2 con los lotes de cada recolector y la lista completa de lotes)"
   end

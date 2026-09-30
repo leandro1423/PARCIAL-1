@@ -9,7 +9,6 @@ defmodule Datos do
     ]
   end
 
-  @doc "Lista de lotes. Cada uno: %{id, nombre, hectareas}."
   def lotes do
     [
       %{id: "L1", nombre: "El Mirador", hectareas: 2.5},
@@ -18,7 +17,6 @@ defmodule Datos do
     ]
   end
 
-  @doc "Lista de pesajes crudos, sin validar. Cada uno: %{recolector, lote, dia, kilos, verdes}."
   def pesajes do
     [
       %{recolector: "R01", lote: "L1", dia: 1, kilos: 70, verdes: 1.5},
