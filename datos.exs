@@ -1,14 +1,5 @@
 defmodule Datos do
-  @moduledoc """
-  Datos de prueba, tomados tal cual del Anexo del enunciado.
 
-  El día de la sustentación el docente reemplaza este archivo por uno
-  propio y el programa debe funcionar sin modificar nada más, así que
-  este módulo SOLO tiene estas tres funciones (ninguna transformación
-  de datos va aquí).
-  """
-
-  @doc "Lista de recolectores. Cada uno: %{codigo, nombre, alimentacion}."
   def recolectores do
     [
       %{codigo: "R01", nombre: "Luz Marina Ospina", alimentacion: true},

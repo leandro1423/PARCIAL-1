@@ -169,16 +169,6 @@ defmodule Util do
 
   def calcular_edad(_, _), do: {:error, :fechas_invalidas}
 
-  # Formateo y agregaciones genéricas, reutilizables por varios reportes
-  # (R2, R4, R5, R6, R7, R8 y el desprendible de pago).
-
-  @doc """
-  Convierte cualquier número (entero o flotante) a texto con una
-  cantidad fija de decimales, sin notación científica. Sirve tanto
-  para valores en pesos como para cualquier otro número que necesite
-  un formato de presentación estable (por ejemplo un rendimiento en
-  kg/ha).
-  """
   def formatear_decimal(valor, decimales)
       when is_number(valor) and is_integer(decimales) and decimales >= 0 do
     :erlang.float_to_binary(valor / 1, decimals: decimales)
@@ -186,17 +176,8 @@ defmodule Util do
 
   def formatear_decimal(_, _), do: {:error, :argumentos_invalidos}
 
-  @doc "Valor en pesos con dos decimales fijos y sin notación científica."
   def formatear_dinero(valor), do: formatear_decimal(valor, 2)
 
-  @doc """
-  Recibe un mapa o una lista de pares {clave, valor} y devuelve
-  {claves_empatadas, valor_maximo} con TODAS las claves que alcanzan
-  el máximo (para no perder los empates), o :vacio si no hay pares.
-
-  Útil en cualquier "el/los que más..." del proyecto: mejor recolector
-  de un día, lote con más producción, etc.
-  """
   def maximos_en(pares) do
     lista = Enum.to_list(pares)
 
@@ -213,12 +194,7 @@ defmodule Util do
       {claves, valor_maximo}
     end
   end
-
-  @doc """
-  ¿`lista` contiene TODOS los elementos de `requeridos`? Pensada para
-  el estilo de R8 (¿un recolector pasó por todos los lotes?), pero
-  sirve para cualquier verificación de "cobertura completa".
-  """
+  
   def contiene_todos?(lista, requeridos) do
     Enum.all?(requeridos, &(&1 in lista))
   end

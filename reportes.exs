@@ -1,17 +1,5 @@
 defmodule Reportes do
-  @moduledoc """
-  Construye el texto de cada reporte y lo devuelve sin imprimirlo — la
-  impresión la hace `Programa.main`. R3, R5 y el desprendible de pago
-  (B.5) están completos. R1, R2, R4, R6, R7 y R8 quedan como
-  placeholder para que cada compañero los complete en su propia
-  función, sin tocar `Programa`.
-  """
-
-  # ---------------------------------------------------------------
-  # R3 (tuyo)
-  # ---------------------------------------------------------------
-
-  @doc "Reporte R3: kilos de la finca por día y cumplimiento de la meta diaria."
+ 
   def r3(pesajes_validos) do
     kilos_por_dia = Liquidacion.kilos_por_dia_finca(pesajes_validos)
 
@@ -36,11 +24,6 @@ defmodule Reportes do
     """
   end
 
-  # ---------------------------------------------------------------
-  # R5 (tuyo)
-  # ---------------------------------------------------------------
-
-  @doc "Reporte R5: mejor recolector de cada día, y quién lo fue en más días."
   def r5(pesajes_validos, recolectores) do
     mejores = Liquidacion.mejores_por_dia(pesajes_validos)
 
@@ -76,13 +59,6 @@ defmodule Reportes do
     """
   end
 
-  # ---------------------------------------------------------------
-  # Desprendible de pago (B.5) — necesario para que programa.exs
-  # funcione de punta a punta; no es uno de los 8 reportes pero usa
-  # las mismas piezas de Liquidacion que R3/R5.
-  # ---------------------------------------------------------------
-
-  @doc "Desprendible de pago de un recolector: detalle por día, totales y neto."
   def desprendible(recolector, pesajes_validos) do
     pesajes_del_recolector = Enum.filter(pesajes_validos, &(&1.recolector == recolector.codigo))
     detalle = Liquidacion.detalle_diario_recolector(pesajes_del_recolector)
@@ -107,11 +83,6 @@ defmodule Reportes do
     """
   end
 
-  # ---------------------------------------------------------------
-  # Placeholders — cada compañero reemplaza su función, sin tocar
-  # Programa.main (ya está llamando a Reportes.r1 .. r8 en orden).
-  # ---------------------------------------------------------------
-
   def r1(_pesajes_rechazados) do
     "R1. Pesajes rechazados\n(pendiente — lo hace el compañero de Validacion/Reportes)"
   end
@@ -135,10 +106,6 @@ defmodule Reportes do
   def r8(_pesajes_validos, _lotes) do
     "R8. Recolectores que trabajaron en todos los lotes\n(pendiente — usa Util.contiene_todos?/2 con los lotes de cada recolector y la lista completa de lotes)"
   end
-
-  # ---------------------------------------------------------------
-  # Helpers privados de formato (solo texto, siguen siendo puros)
-  # ---------------------------------------------------------------
 
   defp si_no(true), do: "Sí"
   defp si_no(false), do: "No"

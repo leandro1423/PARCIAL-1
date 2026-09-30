@@ -1,12 +1,5 @@
 defmodule Programa do
-  @moduledoc """
-  Punto de entrada del programa. Se ejecuta con `elixir programa.exs`
-  después de compilar los demás módulos con `elixirc` (ver README).
-
-  Todo el I/O vive aquí (y en Util); Validacion, Liquidacion y Reportes
-  siguen siendo puros.
-  """
-
+ 
   def main do
     # 1. Cargar los datos crudos
     recolectores = Datos.recolectores()
@@ -32,10 +25,6 @@ defmodule Programa do
     mostrar_desprendible(recolectores, pesajes_validos)
   end
 
-  # ---------------------------------------------------------------
-  # Paso 2: separar válidos / rechazados
-  # ---------------------------------------------------------------
-
   defp pesajes_validos_de(resultados) do
     resultados
     |> Enum.filter(&match?({:ok, _}, &1))
@@ -45,10 +34,6 @@ defmodule Programa do
   defp pesajes_rechazados_de(resultados) do
     Enum.filter(resultados, &match?({:error, _, _}, &1))
   end
-
-  # ---------------------------------------------------------------
-  # Paso 3: pesaje adicional (B.5)
-  # ---------------------------------------------------------------
 
   defp agregar_pesaje_adicional(recolectores, lotes, pesajes_validos, pesajes_rechazados) do
     linea = Util.leer("Ingrese un pesaje adicional (recolector;lote;dia;kilos;verdes) o Enter para omitir: ", :string)
@@ -83,10 +68,6 @@ defmodule Programa do
     end
   end
 
-  # "recolector;lote;dia;kilos;verdes" -> %{recolector:, lote:, dia:, kilos:, verdes:}
-  # Se rechaza con :formato_invalido si no hay 5 campos, si el día no es
-  # un entero exacto o si kilos/verdes no son números exactos (sin
-  # texto sobrante), tal como lo pide B.5.
   defp parsear_pesaje(linea) do
     case linea |> String.split(";") |> Enum.map(&String.trim/1) do
       [recolector, lote, dia_txt, kilos_txt, verdes_txt] ->
@@ -117,10 +98,6 @@ defmodule Programa do
     end
   end
 
-  # ---------------------------------------------------------------
-  # Paso 5: los 8 reportes, en orden
-  # ---------------------------------------------------------------
-
   defp imprimir_reportes(pesajes_validos, pesajes_rechazados, recolectores, lotes, liquidaciones) do
     Util.imprimir_mensaje(Reportes.r1(pesajes_rechazados))
     Util.imprimir_mensaje(Reportes.r2(pesajes_validos, lotes))
@@ -131,10 +108,6 @@ defmodule Programa do
     Util.imprimir_mensaje(Reportes.r7(liquidaciones))
     Util.imprimir_mensaje(Reportes.r8(pesajes_validos, lotes))
   end
-
-  # ---------------------------------------------------------------
-  # Paso 6: desprendible de pago (B.5)
-  # ---------------------------------------------------------------
 
   defp mostrar_desprendible(recolectores, pesajes_validos) do
     codigo = Util.leer("Ingrese el código del recolector para ver su desprendible: ", :string)
