@@ -1,0 +1,162 @@
+defmodule Reportes do
+  @moduledoc """
+  Construye el texto de cada reporte y lo devuelve sin imprimirlo — la
+  impresión la hace `Programa.main`. R3, R5 y el desprendible de pago
+  (B.5) están completos. R1, R2, R4, R6, R7 y R8 quedan como
+  placeholder para que cada compañero los complete en su propia
+  función, sin tocar `Programa`.
+  """
+
+  # ---------------------------------------------------------------
+  # R3 (tuyo)
+  # ---------------------------------------------------------------
+
+  @doc "Reporte R3: kilos de la finca por día y cumplimiento de la meta diaria."
+  def r3(pesajes_validos) do
+    kilos_por_dia = Liquidacion.kilos_por_dia_finca(pesajes_validos)
+
+    lineas =
+      for dia <- 1..6 do
+        kilos = kilos_por_dia[dia]
+        estado = if Liquidacion.cumple_meta_diaria?(kilos), do: "cumplió la meta", else: "no cumplió la meta"
+        "Día #{dia}: #{formatear_kilos(kilos)} kg -> #{estado}"
+      end
+      |> Enum.join("\n")
+
+    valores = Map.values(kilos_por_dia)
+    todos_cumplieron = Enum.all?(valores, &Liquidacion.cumple_meta_diaria?/1)
+    algun_dia_cumplio = Enum.any?(valores, &Liquidacion.cumple_meta_diaria?/1)
+
+    """
+    R3. Kilos por día (meta: 400 kg)
+    #{lineas}
+
+    ¿Se cumplió la meta todos los días? #{si_no(todos_cumplieron)}
+    ¿Se cumplió la meta al menos un día? #{si_no(algun_dia_cumplio)}
+    """
+  end
+
+  # ---------------------------------------------------------------
+  # R5 (tuyo)
+  # ---------------------------------------------------------------
+
+  @doc "Reporte R5: mejor recolector de cada día, y quién lo fue en más días."
+  def r5(pesajes_validos, recolectores) do
+    mejores = Liquidacion.mejores_por_dia(pesajes_validos)
+
+    lineas =
+      for dia <- 1..6 do
+        case mejores[dia] do
+          :sin_pesajes ->
+            "Día #{dia}: sin pesajes"
+
+          {ganadores, kilos} ->
+            nombres = ganadores |> Enum.map(&nombre_de(&1, recolectores)) |> Enum.join(", ")
+            "Día #{dia}: #{nombres} (#{formatear_kilos(kilos)} kg)"
+        end
+      end
+      |> Enum.join("\n")
+
+    resumen =
+      case Liquidacion.recolector_con_mas_dias_ganador(mejores) do
+        :sin_ganadores ->
+          "Nadie fue el mejor recolector en ningún día."
+
+        {ganadores, dias} ->
+          nombres = ganadores |> Enum.map(&nombre_de(&1, recolectores)) |> Enum.join(", ")
+          etiqueta_dias = if dias == 1, do: "día", else: "días"
+          "Más días como mejor recolector: #{nombres} (#{dias} #{etiqueta_dias})"
+      end
+
+    """
+    R5. Mejor recolector de cada día
+    #{lineas}
+
+    #{resumen}
+    """
+  end
+
+  # ---------------------------------------------------------------
+  # Desprendible de pago (B.5) — necesario para que programa.exs
+  # funcione de punta a punta; no es uno de los 8 reportes pero usa
+  # las mismas piezas de Liquidacion que R3/R5.
+  # ---------------------------------------------------------------
+
+  @doc "Desprendible de pago de un recolector: detalle por día, totales y neto."
+  def desprendible(recolector, pesajes_validos) do
+    pesajes_del_recolector = Enum.filter(pesajes_validos, &(&1.recolector == recolector.codigo))
+    detalle = Liquidacion.detalle_diario_recolector(pesajes_del_recolector)
+    liquidacion = Liquidacion.liquidar_recolector(recolector, pesajes_del_recolector)
+    dias_trabajados = length(detalle)
+
+    lineas_dias =
+      detalle
+      |> Enum.map(fn d ->
+        "Día #{d.dia}: #{formatear_kilos(d.kilos)} kg | pesajes $#{Util.formatear_dinero(d.valor_pesajes)} | bonificación $#{Util.formatear_dinero(d.bonificacion)}"
+      end)
+      |> Enum.join("\n")
+
+    """
+    Desprendible de pago - #{recolector.nombre} (#{recolector.codigo})
+    #{lineas_dias}
+
+    Suma de pesajes: $#{Util.formatear_dinero(liquidacion.suma_pesajes)}
+    Bonificaciones: $#{Util.formatear_dinero(liquidacion.bonificaciones)}
+    Alimentación (#{dias_trabajados} días): -$#{Util.formatear_dinero(liquidacion.alimentacion)}
+    Neto a pagar: $#{Util.formatear_dinero(liquidacion.neto)}
+    """
+  end
+
+  # ---------------------------------------------------------------
+  # Placeholders — cada compañero reemplaza su función, sin tocar
+  # Programa.main (ya está llamando a Reportes.r1 .. r8 en orden).
+  # ---------------------------------------------------------------
+
+  def r1(_pesajes_rechazados) do
+    "R1. Pesajes rechazados\n(pendiente — lo hace el compañero de Validacion/Reportes)"
+  end
+
+  def r2(_pesajes_validos, _lotes) do
+    "R2. Kilos por lote\n(pendiente)"
+  end
+
+  def r4(_liquidaciones) do
+    "R4. Liquidación de la semana\n(pendiente)"
+  end
+
+  def r6(_pesajes_validos) do
+    "R6. Mejor calidad\n(pendiente — usa Util.promedio_ponderado)"
+  end
+
+  def r7(_liquidaciones) do
+    "R7. Totales de la semana\n(pendiente)"
+  end
+
+  def r8(_pesajes_validos, _lotes) do
+    "R8. Recolectores que trabajaron en todos los lotes\n(pendiente — usa Util.contiene_todos?/2 con los lotes de cada recolector y la lista completa de lotes)"
+  end
+
+  # ---------------------------------------------------------------
+  # Helpers privados de formato (solo texto, siguen siendo puros)
+  # ---------------------------------------------------------------
+
+  defp si_no(true), do: "Sí"
+  defp si_no(false), do: "No"
+
+  defp nombre_de(codigo, recolectores) do
+    case Enum.find(recolectores, &(&1.codigo == codigo)) do
+      nil -> codigo
+      recolector -> recolector.nombre
+    end
+  end
+
+  defp formatear_kilos(kilos) when is_float(kilos) do
+    if kilos == Float.round(kilos, 0) do
+      kilos |> round() |> Integer.to_string()
+    else
+      :erlang.float_to_binary(kilos, decimals: 1)
+    end
+  end
+
+  defp formatear_kilos(kilos), do: Integer.to_string(kilos)
+end
