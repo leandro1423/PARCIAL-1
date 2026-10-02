@@ -1,19 +1,9 @@
-# Verificación con los datos de prueba del Anexo del enunciado.
-# No usa datos.exs: trae su propia copia de los datos del Anexo, así se puede comprobar
-# que la lógica da los valores esperados aunque datos.exs tenga los datos del grupo.
-#
-# Requiere haber compilado antes los módulos de apoyo:
-#   elixirc datos.exs util.exs validacion.exs liquidacion.exs reportes.exs
-# Ejecutar:
-#   elixir verificacion_anexo.exs
-
 defmodule VerificacionAnexo do
   @moduledoc """
   Compara los resultados del programa con la salida esperada del Anexo y con el ejemplo
   de liquidación de Luz Marina. Imprime `OK` o `FALLO` por cada comprobación y, al final,
   los reportes completos generados con los datos del Anexo.
 
-  Es un script de apoyo para el grupo: no forma parte del flujo de `Programa`.
   """
 
   @recolectores [

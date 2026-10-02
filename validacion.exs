@@ -4,9 +4,6 @@ defmodule Validacion do
 
   También convierte la línea que escribe el usuario en B.5 ('recolector;lote;dia;kilos;verdes')
   en un pesaje, o la rechaza con '{:error, :formato_invalido}'.
-
-  Todas las funciones de este módulo son **puras**: reciben datos y devuelven tuplas
-  '{:ok, valor}' / '{:error, motivo}'; nunca imprimen ni lanzan excepciones.
   """
 
   @dia_minimo 1
@@ -17,8 +14,6 @@ defmodule Validacion do
 
   @doc """
   Lista, en el orden en que se revisan, de todos los motivos de rechazo posibles.
-
-  'Reportes.r1/1' la usa para mostrar el conteo de cada motivo, incluso los que tienen 0.
   """
   def motivos,
     do: [
@@ -31,10 +26,7 @@ defmodule Validacion do
 
   @doc """
   Valida un pesaje encadenando las cinco verificaciones con 'with' (requisito B.2).
-  Si todas las verificaciones devuelven '{:ok, _}' el resultado es '{:ok, pesaje}'. En
-  cuanto una devuelve '{:error, motivo}', 'with' se detiene y devuelve ese error tal cual,
-  por eso solo se informa el primer motivo (por ejemplo, el pesaje de R04 con día 7 y
-  300 kg se rechaza por ':dia_invalido').
+  Si todas las verificaciones devuelven '{:ok, _}' el resultado es '{:ok, pesaje}'.
   """
   def validar_pesaje(pesaje, recolectores_por_codigo, lotes_por_id) do
     with {:ok, _} <- validar_recolector(Map.get(pesaje, :recolector), recolectores_por_codigo),
@@ -48,12 +40,6 @@ defmodule Validacion do
 
   @doc """
   Valida una lista completa de pesajes y la separa en válidos y rechazados.
-
-  Devuelve {validos, rechazados} donde:
-
-    * validos es la lista de pesajes que pasaron todas las reglas, en su orden original.
-    * rechazados es una lista de tuplas '{pesaje, motivo}', también en su orden original,
-      que es la que se muestra en el reporte R1.
   """
   def separar_pesajes(pesajes, recolectores_por_codigo, lotes_por_id) do
     resultados =
@@ -82,9 +68,7 @@ defmodule Validacion do
   end
 
   @doc """
-  Regla 3: el día debe ser un **entero** entre 1 y 6.
-
-  Un decimal como '2.0' o '4.5', un texto como '"3"' o 'nil' se rechazan.
+  debe ser un **entero** entre 1 y 6.
   """
   def validar_dia(dia) when is_integer(dia) do
     case Util.validar_rango(dia, @dia_minimo, @dia_maximo) do
@@ -120,16 +104,6 @@ defmodule Validacion do
 
   @doc """
   Convierte una línea 'recolector;lote;dia;kilos;verdes' en un mapa de pesaje.
-
-  Devuelve '{:ok, pesaje}' o '{:error, :formato_invalido}' cuando:
-
-    - la línea no tiene exactamente cinco campos,
-    - el día no es un entero ('"4.5"' o '"cuatro"' se rechazan),
-    - los kilos o los verdes no son números.
-
-  Esta función **solo revisa el formato**; las reglas de negocio se aplican después con
-  validar_pesaje/3', igual que a los pesajes de 'datos.exs'.
-
   """
   def parsear_linea(linea) do
     case linea |> String.split(";") |> Enum.map(&String.trim/1) do
