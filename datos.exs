@@ -1,6 +1,3 @@
-# Integrantes: Leandro, Martin, Samuel
-# Programación III - Parcial 1: Liquidación de la cosecha de una finca cafetera
-#
 # Datos del grupo: 11 recolectores (5 con alimentación), 4 lotes, pesajes en los 6 días,
 # 83 pesajes válidos y 14 inválidos (al menos dos por cada motivo de rechazo).
 # Los datos de prueba del Anexo están en verificacion_anexo.exs.

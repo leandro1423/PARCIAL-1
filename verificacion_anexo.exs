@@ -1,6 +1,3 @@
-# Integrantes: Leandro, Martin, Samuel
-# Programación III - Parcial 1: Liquidación de la cosecha de una finca cafetera
-#
 # Verificación con los datos de prueba del Anexo del enunciado.
 # No usa datos.exs: trae su propia copia de los datos del Anexo, así se puede comprobar
 # que la lógica da los valores esperados aunque datos.exs tenga los datos del grupo.
