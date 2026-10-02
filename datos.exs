@@ -1,11 +1,3 @@
-# Datos del grupo: 11 recolectores (5 con alimentación), 4 lotes, pesajes en los 6 días,
-# 83 pesajes válidos y 14 inválidos (al menos dos por cada motivo de rechazo).
-# Los datos de prueba del Anexo están en verificacion_anexo.exs.
-#
-# Este módulo SOLO tiene las tres funciones que devuelven los datos (B.1): el día de la
-# sustentación se reemplaza este archivo completo. Después de cambiarlo hay que volver a
-# compilarlo con: elixirc datos.exs
-
 defmodule Datos do
   def recolectores do
     [
@@ -114,11 +106,9 @@ defmodule Datos do
       %{recolector: "R09", lote: "L2", dia: 6, kilos: 42, verdes: 3},
       %{recolector: "R09", lote: "L4", dia: 6, kilos: 30.5, verdes: 7},
       %{recolector: "R09", lote: "L3", dia: 6, kilos: 43, verdes: 2},
-      # R10: caso para explicar R6 (ponderado por kilos vs promedio simple)
       %{recolector: "R10", lote: "L4", dia: 2, kilos: 180, verdes: 0.5},
       %{recolector: "R10", lote: "L4", dia: 3, kilos: 15, verdes: 14},
       %{recolector: "R10", lote: "L1", dia: 4, kilos: 15, verdes: 14},
-      # ---- Pesajes inválidos a propósito (al menos dos por cada motivo) ----
       %{recolector: "R15", lote: "L1", dia: 2, kilos: 60, verdes: 3},
       %{recolector: "r01", lote: "L2", dia: 3, kilos: 55, verdes: 4},
       %{recolector: "R20", lote: "L9", dia: 9, kilos: 300, verdes: 120},

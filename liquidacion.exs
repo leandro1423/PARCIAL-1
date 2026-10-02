@@ -1,3 +1,6 @@
+# Integrantes: Leandro, Martin, Samuel
+# Programación III - Parcial 1: Liquidación de la cosecha de una finca cafetera
+
 defmodule Liquidacion do
   @moduledoc """
   Módulo encargado de calcular el valor de los pesajes, bonificaciones, alimentación y
