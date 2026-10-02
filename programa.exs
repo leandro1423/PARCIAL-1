@@ -1,8 +1,3 @@
-# Compilar los módulos de apoyo (repetirlo cada vez que cambie datos.exs):
-#   elixirc datos.exs util.exs validacion.exs liquidacion.exs reportes.exs
-# Ejecutar:
-#   elixir programa.exs
-
 defmodule Programa do
   @moduledoc """
   Punto de entrada de la aplicación.
@@ -11,11 +6,6 @@ defmodule Programa do
   adicional por consola, liquida a los recolectores, imprime los reportes R1 a R8, el
   ranking (C.1), la combinación con la finca vecina (C.2) y, al final, el desprendible de
   un recolector.
-
-  Junto con `Util`, es el único módulo con funciones **impuras** (leen o escriben en
-  consola): `main/0`, `agregar_pesaje_adicional/3`, `imprimir_reportes/5` y
-  `mostrar_desprendible/2`. Toda la lógica de validación, liquidación y reportes que
-  invoca es pura.
   """
 
   @finca_vecina %{1 => 520.5, 2 => 610, 3 => 480, 5 => 700, 7 => 300}
