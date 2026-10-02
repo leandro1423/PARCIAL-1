@@ -1,25 +1,12 @@
-# Integrantes: Leandro, Martin, Samuel
-# Programación III - Parcial 1: Liquidación de la cosecha de una finca cafetera
-
 defmodule Validacion do
   @moduledoc """
   Valida los pesajes antes de que entren a cualquier cálculo (regla de negocio 1).
 
-  Cada pesaje se revisa en este orden y se rechaza con el **primer** motivo que aplique:
-
-  | Orden | Regla                                         | Motivo de rechazo          |
-  |-------|-----------------------------------------------|----------------------------|
-  | 1     | El código del recolector existe               | `:recolector_desconocido`  |
-  | 2     | El lote existe                                | `:lote_desconocido`        |
-  | 3     | El día es un entero entre 1 y 6               | `:dia_invalido`            |
-  | 4     | Los kilos son un número > 0 y como máximo 250 | `:kilos_fuera_de_rango`    |
-  | 5     | Los verdes son un número entre 0 y 100        | `:porcentaje_invalido`     |
-
-  También convierte la línea que escribe el usuario en B.5 (`recolector;lote;dia;kilos;verdes`)
-  en un pesaje, o la rechaza con `{:error, :formato_invalido}`.
+  También convierte la línea que escribe el usuario en B.5 ('recolector;lote;dia;kilos;verdes')
+  en un pesaje, o la rechaza con '{:error, :formato_invalido}'.
 
   Todas las funciones de este módulo son **puras**: reciben datos y devuelven tuplas
-  `{:ok, valor}` / `{:error, motivo}`; nunca imprimen ni lanzan excepciones.
+  '{:ok, valor}' / '{:error, motivo}'; nunca imprimen ni lanzan excepciones.
   """
 
   @dia_minimo 1
@@ -31,7 +18,7 @@ defmodule Validacion do
   @doc """
   Lista, en el orden en que se revisan, de todos los motivos de rechazo posibles.
 
-  `Reportes.r1/1` la usa para mostrar el conteo de cada motivo, incluso los que tienen 0.
+  'Reportes.r1/1' la usa para mostrar el conteo de cada motivo, incluso los que tienen 0.
   """
   def motivos,
     do: [
@@ -43,16 +30,11 @@ defmodule Validacion do
     ]
 
   @doc """
-  Valida un pesaje encadenando las cinco verificaciones con `with` (requisito B.2).
-
-    * `pesaje` es un mapa `%{recolector:, lote:, dia:, kilos:, verdes:}`.
-    * `recolectores_por_codigo` es un mapa `%{"R01" => %{...}}` (ver `Util.indexar_por/2`).
-    * `lotes_por_id` es un mapa `%{"L1" => %{...}}`.
-
-  Si todas las verificaciones devuelven `{:ok, _}` el resultado es `{:ok, pesaje}`. En
-  cuanto una devuelve `{:error, motivo}`, `with` se detiene y devuelve ese error tal cual,
+  Valida un pesaje encadenando las cinco verificaciones con 'with' (requisito B.2).
+  Si todas las verificaciones devuelven '{:ok, _}' el resultado es '{:ok, pesaje}'. En
+  cuanto una devuelve '{:error, motivo}', 'with' se detiene y devuelve ese error tal cual,
   por eso solo se informa el primer motivo (por ejemplo, el pesaje de R04 con día 7 y
-  300 kg se rechaza por `:dia_invalido`).
+  300 kg se rechaza por ':dia_invalido').
   """
   def validar_pesaje(pesaje, recolectores_por_codigo, lotes_por_id) do
     with {:ok, _} <- validar_recolector(Map.get(pesaje, :recolector), recolectores_por_codigo),
@@ -67,10 +49,10 @@ defmodule Validacion do
   @doc """
   Valida una lista completa de pesajes y la separa en válidos y rechazados.
 
-  Devuelve `{validos, rechazados}` donde:
+  Devuelve {validos, rechazados} donde:
 
-    * `validos` es la lista de pesajes que pasaron todas las reglas, en su orden original.
-    * `rechazados` es una lista de tuplas `{pesaje, motivo}`, también en su orden original,
+    * validos es la lista de pesajes que pasaron todas las reglas, en su orden original.
+    * rechazados es una lista de tuplas '{pesaje, motivo}', también en su orden original,
       que es la que se muestra en el reporte R1.
   """
   def separar_pesajes(pesajes, recolectores_por_codigo, lotes_por_id) do
@@ -102,7 +84,7 @@ defmodule Validacion do
   @doc """
   Regla 3: el día debe ser un **entero** entre 1 y 6.
 
-  Un decimal como `2.0` o `4.5`, un texto como `"3"` o `nil` se rechazan.
+  Un decimal como '2.0' o '4.5', un texto como '"3"' o 'nil' se rechazan.
   """
   def validar_dia(dia) when is_integer(dia) do
     case Util.validar_rango(dia, @dia_minimo, @dia_maximo) do
@@ -116,7 +98,7 @@ defmodule Validacion do
   @doc """
   Regla 4: los kilos deben ser un número mayor que 0 y como máximo 250.
 
-  Primero se exige que sea positivo (descarta `0`, negativos y valores que no son número) y
+  Primero se exige que sea positivo (descarta '0', negativos y valores que no son número) y
   luego que no supere el máximo por pesaje.
   """
   def validar_kilos(kilos) do
@@ -136,24 +118,18 @@ defmodule Validacion do
     end
   end
 
-  # ---------------------------------------------------------------------------
-  # B.5: lectura del pesaje adicional escrito por el usuario
-  # ---------------------------------------------------------------------------
-
   @doc """
-  Convierte una línea `recolector;lote;dia;kilos;verdes` en un mapa de pesaje.
+  Convierte una línea 'recolector;lote;dia;kilos;verdes' en un mapa de pesaje.
 
-  Devuelve `{:ok, pesaje}` o `{:error, :formato_invalido}` cuando:
+  Devuelve '{:ok, pesaje}' o '{:error, :formato_invalido}' cuando:
 
-    * la línea no tiene exactamente cinco campos,
-    * el día no es un entero (`"4.5"` o `"cuatro"` se rechazan),
-    * los kilos o los verdes no son números.
+    - la línea no tiene exactamente cinco campos,
+    - el día no es un entero ('"4.5"' o '"cuatro"' se rechazan),
+    - los kilos o los verdes no son números.
 
   Esta función **solo revisa el formato**; las reglas de negocio se aplican después con
-  `validar_pesaje/3`, igual que a los pesajes de `datos.exs`.
+  validar_pesaje/3', igual que a los pesajes de 'datos.exs'.
 
-      iex> Validacion.parsear_linea("R04;L3; 2;92.5;3")
-      {:ok, %{recolector: "R04", lote: "L3", dia: 2, kilos: 92.5, verdes: 3.0}}
   """
   def parsear_linea(linea) do
     case linea |> String.split(";") |> Enum.map(&String.trim/1) do
@@ -164,7 +140,6 @@ defmodule Validacion do
           {:ok, %{recolector: recolector, lote: lote, dia: dia, kilos: kilos, verdes: verdes}}
         end
 
-      _otro_numero_de_campos ->
         {:error, :formato_invalido}
     end
   end

@@ -1,6 +1,3 @@
-# Integrantes: Leandro, Martin, Samuel
-# Programación III - Parcial 1: Liquidación de la cosecha de una finca cafetera
-#
 # Compilar los módulos de apoyo (repetirlo cada vez que cambie datos.exs):
 #   elixirc datos.exs util.exs validacion.exs liquidacion.exs reportes.exs
 # Ejecutar:

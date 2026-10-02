@@ -1,6 +1,3 @@
-# Integrantes: Leandro, Martin, Samuel
-# Programación III - Parcial 1: Liquidación de la cosecha de una finca cafetera
-
 defmodule Util do
   @moduledoc """
   Utilidades de apoyo para el resto del programa.
