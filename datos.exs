@@ -1,11 +1,28 @@
-defmodule Datos do
+# Integrantes: Leandro, Martin, Samuel
+# Programación III - Parcial 1: Liquidación de la cosecha de una finca cafetera
+#
+# Datos del grupo: 11 recolectores (5 con alimentación), 4 lotes, pesajes en los 6 días,
+# 83 pesajes válidos y 14 inválidos (al menos dos por cada motivo de rechazo).
+# Los datos de prueba del Anexo están en verificacion_anexo.exs.
+#
+# Este módulo SOLO tiene las tres funciones que devuelven los datos (B.1): el día de la
+# sustentación se reemplaza este archivo completo. Después de cambiarlo hay que volver a
+# compilarlo con: elixirc datos.exs
 
+defmodule Datos do
   def recolectores do
     [
       %{codigo: "R01", nombre: "Luz Marina Ospina", alimentacion: true},
       %{codigo: "R02", nombre: "Jhon Fredy Castaño", alimentacion: false},
       %{codigo: "R03", nombre: "Dora Cardona", alimentacion: true},
-      %{codigo: "R04", nombre: "Wilson Arango", alimentacion: false}
+      %{codigo: "R04", nombre: "Wilson Arango", alimentacion: false},
+      %{codigo: "R05", nombre: "Gloria Inés Valencia", alimentacion: true},
+      %{codigo: "R06", nombre: "Hernán Darío Giraldo", alimentacion: false},
+      %{codigo: "R07", nombre: "Marleny Quintero", alimentacion: true},
+      %{codigo: "R08", nombre: "Albeiro Restrepo", alimentacion: false},
+      %{codigo: "R09", nombre: "Yolanda Henao", alimentacion: true},
+      %{codigo: "R10", nombre: "Fabio Nelson Ríos", alimentacion: false},
+      %{codigo: "R11", nombre: "Carlos Arturo Montoya", alimentacion: false}
     ]
   end
 
@@ -13,31 +30,112 @@ defmodule Datos do
     [
       %{id: "L1", nombre: "El Mirador", hectareas: 2.5},
       %{id: "L2", nombre: "La Cañada", hectareas: 1.5},
-      %{id: "L3", nombre: "Buenavista", hectareas: 3.0}
+      %{id: "L3", nombre: "Buenavista", hectareas: 3.0},
+      %{id: "L4", nombre: "La Esperanza", hectareas: 2.0}
     ]
   end
 
   def pesajes do
     [
-      %{recolector: "R01", lote: "L1", dia: 1, kilos: 70, verdes: 1.5},
-      %{recolector: "R01", lote: "L2", dia: 1, kilos: 55, verdes: 6},
-      %{recolector: "R01", lote: "L1", dia: 2, kilos: 90, verdes: 12},
-      %{recolector: "R02", lote: "L1", dia: 1, kilos: 100, verdes: 2},
-      %{recolector: "R02", lote: "L3", dia: 1, kilos: 45, verdes: 3},
-      %{recolector: "R02", lote: "L2", dia: 2, kilos: 60.5, verdes: 4},
-      %{recolector: "R02", lote: "L3", dia: 2, kilos: 65, verdes: 5},
-      %{recolector: "R02", lote: "L3", dia: 3, kilos: 110, verdes: 1},
-      %{recolector: "R03", lote: "L2", dia: 1, kilos: 80, verdes: 3},
-      %{recolector: "R03", lote: "L3", dia: 1, kilos: 60, verdes: 4},
-      %{recolector: "R03", lote: "L1", dia: 2, kilos: 85, verdes: 2.5},
-      %{recolector: "R03", lote: "L2", dia: 3, kilos: 95, verdes: 8},
-      %{recolector: "R03", lote: "L1", dia: 3, kilos: 40, verdes: 0},
-      %{recolector: "R09", lote: "L1", dia: 1, kilos: 80, verdes: 3},
-      %{recolector: "R03", lote: "L7", dia: 2, kilos: 50, verdes: 2},
-      %{recolector: "R04", lote: "L3", dia: 7, kilos: 300, verdes: 3},
-      %{recolector: "R02", lote: "L2", dia: 3, kilos: 0, verdes: 4},
-      %{recolector: "R01", lote: "L3", dia: 3, kilos: 300, verdes: 2},
-      %{recolector: "R01", lote: "L2", dia: 3, kilos: 40, verdes: 130}
+      %{recolector: "R01", lote: "L1", dia: 1, kilos: 60, verdes: 3},
+      %{recolector: "R01", lote: "L2", dia: 2, kilos: 75, verdes: 10},
+      %{recolector: "R01", lote: "L1", dia: 2, kilos: 68.5, verdes: 1.5},
+      %{recolector: "R01", lote: "L2", dia: 2, kilos: 58, verdes: 0},
+      %{recolector: "R01", lote: "L2", dia: 3, kilos: 30.25, verdes: 4.5},
+      %{recolector: "R01", lote: "L1", dia: 3, kilos: 31, verdes: 4},
+      %{recolector: "R01", lote: "L2", dia: 4, kilos: 75, verdes: 6},
+      %{recolector: "R01", lote: "L2", dia: 5, kilos: 59.5, verdes: 4.5},
+      %{recolector: "R01", lote: "L2", dia: 5, kilos: 69, verdes: 10},
+      %{recolector: "R02", lote: "L1", dia: 1, kilos: 76, verdes: 8},
+      %{recolector: "R02", lote: "L2", dia: 1, kilos: 76, verdes: 5},
+      %{recolector: "R02", lote: "L3", dia: 1, kilos: 75, verdes: 10},
+      %{recolector: "R02", lote: "L4", dia: 2, kilos: 53, verdes: 11},
+      %{recolector: "R02", lote: "L1", dia: 2, kilos: 72, verdes: 3},
+      %{recolector: "R02", lote: "L2", dia: 3, kilos: 37, verdes: 9},
+      %{recolector: "R02", lote: "L3", dia: 4, kilos: 64, verdes: 5},
+      %{recolector: "R02", lote: "L4", dia: 4, kilos: 96.0, verdes: 0},
+      %{recolector: "R02", lote: "L1", dia: 5, kilos: 54, verdes: 8},
+      %{recolector: "R02", lote: "L2", dia: 6, kilos: 68, verdes: 7},
+      %{recolector: "R02", lote: "L3", dia: 6, kilos: 74, verdes: 5},
+      %{recolector: "R03", lote: "L1", dia: 1, kilos: 61, verdes: 4},
+      %{recolector: "R03", lote: "L2", dia: 1, kilos: 54, verdes: 6},
+      %{recolector: "R03", lote: "L3", dia: 1, kilos: 62, verdes: 6},
+      %{recolector: "R03", lote: "L4", dia: 2, kilos: 70, verdes: 1},
+      %{recolector: "R03", lote: "L1", dia: 2, kilos: 60, verdes: 4.5},
+      %{recolector: "R03", lote: "L2", dia: 3, kilos: 23, verdes: 2},
+      %{recolector: "R03", lote: "L3", dia: 5, kilos: 69.5, verdes: 6},
+      %{recolector: "R03", lote: "L4", dia: 5, kilos: 58, verdes: 11},
+      %{recolector: "R03", lote: "L1", dia: 6, kilos: 47.5, verdes: 9},
+      %{recolector: "R03", lote: "L2", dia: 6, kilos: 70, verdes: 2},
+      %{recolector: "R04", lote: "L4", dia: 2, kilos: 40, verdes: 2},
+      %{recolector: "R04", lote: "L3", dia: 3, kilos: 18, verdes: 11},
+      %{recolector: "R04", lote: "L4", dia: 3, kilos: 29, verdes: 1},
+      %{recolector: "R04", lote: "L3", dia: 3, kilos: 21, verdes: 10},
+      %{recolector: "R04", lote: "L3", dia: 4, kilos: 46, verdes: 8},
+      %{recolector: "R04", lote: "L3", dia: 4, kilos: 55.5, verdes: 1.5},
+      %{recolector: "R04", lote: "L4", dia: 6, kilos: 58.5, verdes: 12},
+      %{recolector: "R04", lote: "L3", dia: 6, kilos: 41, verdes: 0},
+      %{recolector: "R05", lote: "L4", dia: 1, kilos: 50, verdes: 6},
+      %{recolector: "R05", lote: "L4", dia: 1, kilos: 45, verdes: 6},
+      %{recolector: "R05", lote: "L2", dia: 1, kilos: 53, verdes: 2},
+      %{recolector: "R05", lote: "L4", dia: 2, kilos: 51.5, verdes: 6},
+      %{recolector: "R05", lote: "L2", dia: 2, kilos: 54.5, verdes: 9},
+      %{recolector: "R05", lote: "L2", dia: 2, kilos: 47.5, verdes: 0.5},
+      %{recolector: "R05", lote: "L4", dia: 4, kilos: 64, verdes: 12},
+      %{recolector: "R05", lote: "L2", dia: 4, kilos: 41, verdes: 2},
+      %{recolector: "R05", lote: "L2", dia: 4, kilos: 55, verdes: 2},
+      %{recolector: "R05", lote: "L4", dia: 5, kilos: 47, verdes: 1},
+      %{recolector: "R05", lote: "L4", dia: 5, kilos: 47, verdes: 2},
+      %{recolector: "R05", lote: "L4", dia: 6, kilos: 49, verdes: 3.5},
+      %{recolector: "R05", lote: "L4", dia: 6, kilos: 49.5, verdes: 6},
+      %{recolector: "R06", lote: "L3", dia: 1, kilos: 56, verdes: 1.5},
+      %{recolector: "R06", lote: "L1", dia: 3, kilos: 23.75, verdes: 6},
+      %{recolector: "R06", lote: "L1", dia: 3, kilos: 30, verdes: 0},
+      %{recolector: "R06", lote: "L1", dia: 4, kilos: 67.5, verdes: 1.5},
+      %{recolector: "R06", lote: "L1", dia: 4, kilos: 59, verdes: 10},
+      %{recolector: "R06", lote: "L1", dia: 5, kilos: 58, verdes: 1.5},
+      %{recolector: "R06", lote: "L3", dia: 5, kilos: 65, verdes: 2},
+      %{recolector: "R07", lote: "L2", dia: 2, kilos: 56.5, verdes: 2},
+      %{recolector: "R07", lote: "L4", dia: 3, kilos: 25, verdes: 1},
+      %{recolector: "R07", lote: "L2", dia: 4, kilos: 45.5, verdes: 1},
+      %{recolector: "R07", lote: "L2", dia: 4, kilos: 35, verdes: 5},
+      %{recolector: "R07", lote: "L1", dia: 5, kilos: 36.5, verdes: 3.5},
+      %{recolector: "R07", lote: "L4", dia: 6, kilos: 38, verdes: 4.5},
+      %{recolector: "R08", lote: "L3", dia: 1, kilos: 79, verdes: 5},
+      %{recolector: "R08", lote: "L3", dia: 1, kilos: 70, verdes: 5},
+      %{recolector: "R08", lote: "L3", dia: 2, kilos: 73, verdes: 5},
+      %{recolector: "R08", lote: "L3", dia: 5, kilos: 72.5, verdes: 0},
+      %{recolector: "R08", lote: "L3", dia: 5, kilos: 68, verdes: 1.5},
+      %{recolector: "R08", lote: "L3", dia: 6, kilos: 76, verdes: 9},
+      %{recolector: "R08", lote: "L3", dia: 6, kilos: 71.5, verdes: 1.5},
+      %{recolector: "R09", lote: "L2", dia: 1, kilos: 49.5, verdes: 2},
+      %{recolector: "R09", lote: "L4", dia: 1, kilos: 46, verdes: 12},
+      %{recolector: "R09", lote: "L2", dia: 3, kilos: 15, verdes: 4.5},
+      %{recolector: "R09", lote: "L2", dia: 3, kilos: 21, verdes: 5},
+      %{recolector: "R09", lote: "L4", dia: 4, kilos: 54.5, verdes: 0},
+      %{recolector: "R09", lote: "L4", dia: 4, kilos: 51, verdes: 15},
+      %{recolector: "R09", lote: "L2", dia: 6, kilos: 42, verdes: 3},
+      %{recolector: "R09", lote: "L4", dia: 6, kilos: 30.5, verdes: 7},
+      %{recolector: "R09", lote: "L3", dia: 6, kilos: 43, verdes: 2},
+      # R10: caso para explicar R6 (ponderado por kilos vs promedio simple)
+      %{recolector: "R10", lote: "L4", dia: 2, kilos: 180, verdes: 0.5},
+      %{recolector: "R10", lote: "L4", dia: 3, kilos: 15, verdes: 14},
+      %{recolector: "R10", lote: "L1", dia: 4, kilos: 15, verdes: 14},
+      # ---- Pesajes inválidos a propósito (al menos dos por cada motivo) ----
+      %{recolector: "R15", lote: "L1", dia: 2, kilos: 60, verdes: 3},
+      %{recolector: "r01", lote: "L2", dia: 3, kilos: 55, verdes: 4},
+      %{recolector: "R20", lote: "L9", dia: 9, kilos: 300, verdes: 120},
+      %{recolector: "R02", lote: "L5", dia: 1, kilos: 70, verdes: 2},
+      %{recolector: "R03", lote: "l2", dia: 4, kilos: 65, verdes: 3},
+      %{recolector: "R05", lote: "L2", dia: 0, kilos: 50, verdes: 3},
+      %{recolector: "R06", lote: "L3", dia: 7, kilos: 40, verdes: 2},
+      %{recolector: "R07", lote: "L1", dia: 2.5, kilos: 45, verdes: 4},
+      %{recolector: "R11", lote: "L1", dia: 8, kilos: 260, verdes: 3},
+      %{recolector: "R04", lote: "L3", dia: 3, kilos: 0, verdes: 5},
+      %{recolector: "R08", lote: "L3", dia: 5, kilos: 260, verdes: 4},
+      %{recolector: "R11", lote: "L2", dia: 2, kilos: -15, verdes: 3},
+      %{recolector: "R09", lote: "L4", dia: 1, kilos: 45, verdes: -1},
+      %{recolector: "R01", lote: "L1", dia: 5, kilos: 50, verdes: 100.5}
     ]
   end
 end

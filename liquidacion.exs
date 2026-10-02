@@ -1,10 +1,20 @@
+# Integrantes: Leandro, Martin, Samuel
+# Programación III - Parcial 1: Liquidación de la cosecha de una finca cafetera
+
 defmodule Liquidacion do
   @moduledoc """
   Módulo encargado de calcular el valor de los pesajes, bonificaciones, alimentación y
-  resultados de liquidación para cada recolector.
+  resultados de liquidación para cada recolector (reglas de negocio 2 a 5).
 
   La lógica de negocio está centrada en la semana de cosecha y en la evaluación de los
-  kilos acumulados por día y por finca.
+  kilos acumulados por día y por finca. También contiene los agrupamientos de kilos que
+  necesitan varios reportes (por día de la finca, por recolector y día, mejores del día).
+
+  Todas las funciones son **puras**: reciben listas de pesajes **ya validados** y
+  devuelven números, listas o mapas. Nunca imprimen.
+
+  Los parámetros del problema se definen como atributos de módulo; para cambiar una regla
+  (por ejemplo, otro umbral de bonificación) basta con cambiar el atributo correspondiente.
   """
 
   @tarifa_base 1_000
@@ -14,53 +24,95 @@ defmodule Liquidacion do
   @meta_diaria 400
   @dias_cosecha 1..6
 
+  @doc "Meta diaria de kilos de la finca (la usa `Reportes.r3/1` en el título del reporte)."
+  def meta_diaria, do: @meta_diaria
+
+  @doc "Rango con los días de cosecha (1..6). Lo usan los reportes que recorren todos los días."
+  def dias_cosecha, do: @dias_cosecha
+
+  # ---------------------------------------------------------------------------
+  # Regla 2: valor de un pesaje
+  # ---------------------------------------------------------------------------
+
   @doc """
   Calcula el valor pagado por un pesaje según la cantidad de kilos y el porcentaje de verdes.
 
-  La fórmula aplica una tarifa base por kilo y ajusta el valor según la calidad del fruto.
+  La fórmula aplica la tarifa base por kilo y la multiplica por el factor de calidad:
+
+      valor = kilos × tarifa_base × factor_calidad(verdes)
+
+  Ejemplo del enunciado: `valor_pesaje(70, 1.5)` = 70 × 1.000 × 1,05 = 73.500.
+
+  El resultado puede quedar como `62999.99999999999` en lugar de `63000` porque los decimales
+  se guardan de forma aproximada; al mostrarlo con dos decimales queda `63000.00`.
   """
   def valor_pesaje(kilos, verdes) do
-    base = kilos * @tarifa_base
-    {:ok, %{total: total}} = ajuste_por_calidad(base, verdes)
-    total
+    kilos * @tarifa_base * factor_calidad(verdes)
   end
 
-  # Hasta 2 %: bonificación del 5 % -> un recargo, como el que calcula
-  # Util.calcular_total_con_impuesto (subtotal + impuesto).
-  defp ajuste_por_calidad(base, verdes) when verdes <= 2,
-    do: Util.calcular_total_con_impuesto(base, 5)
+  @doc """
+  Devuelve el factor que ajusta el valor de un pesaje según el porcentaje de granos verdes.
 
-  # Más de 2 % y hasta 5 %: sin ajuste = un "descuento" del 0 %.
-  defp ajuste_por_calidad(base, verdes) when verdes <= 5,
-    do: Util.calcular_descuento(base, 0)
+  | Porcentaje de verdes      | Ajuste                 | Factor |
+  |---------------------------|------------------------|--------|
+  | Hasta 2 %                 | Bonificación del 5 %   | 1.05   |
+  | Más de 2 % y hasta 5 %    | Sin ajuste             | 1.00   |
+  | Más de 5 % y hasta 10 %   | Descuento del 10 %     | 0.90   |
+  | Más de 10 %               | Descuento del 30 %     | 0.70   |
 
-  # Más de 5 % y hasta 10 %: descuento del 10 %.
-  defp ajuste_por_calidad(base, verdes) when verdes <= 10,
-    do: Util.calcular_descuento(base, 10)
+  Las cláusulas se evalúan de arriba hacia abajo, por eso cada guarda solo necesita revisar
+  el límite superior: si `verdes` llegó a la segunda cláusula es porque ya es mayor que 2.
+  """
+  def factor_calidad(verdes) when verdes <= 2, do: 1.05
+  def factor_calidad(verdes) when verdes <= 5, do: 1.0
+  def factor_calidad(verdes) when verdes <= 10, do: 0.9
+  def factor_calidad(_verdes), do: 0.7
 
-  # Más de 10 %: descuento del 30 %.
-  defp ajuste_por_calidad(base, _verdes),
-    do: Util.calcular_descuento(base, 30)
+  # ---------------------------------------------------------------------------
+  # Regla 3: bonificación por productividad
+  # ---------------------------------------------------------------------------
 
-  @doc "Determina si un recolector recibe bonificación por alcanzar la cantidad mínima de kilos en un día."
+  @doc """
+  Determina si un recolector recibe bonificación por alcanzar la cantidad mínima de kilos
+  en un día.
+
+  Recibe el **total de kilos del día** (no un pesaje suelto): con 120 kg o más devuelve
+  8.000; con menos devuelve 0.
+  """
   def bonificacion_dia(kilos_dia) when kilos_dia >= @kilos_para_bonificacion,
     do: @bonificacion_diaria
 
-  @doc "Devuelve 0 cuando un día no alcanza la meta de kilos para bonificación."
   def bonificacion_dia(_kilos_dia), do: 0
 
-  @doc "Calcula el costo de alimentación según si el recolector tiene alimentación y la cantidad de días trabajados."
+  # ---------------------------------------------------------------------------
+  # Regla 4: descuento de alimentación
+  # ---------------------------------------------------------------------------
+
+  @doc """
+  Calcula el descuento de alimentación según si el recolector come en la finca y la
+  cantidad de días trabajados (días con al menos un pesaje válido).
+
+  Si `alimentacion` es `true` se descuentan 12.000 por día; con cualquier otro valor
+  (`false`, `nil` o un dato mal digitado) el descuento es 0.
+  """
   def descuento_alimentacion(true, dias_trabajados),
     do: dias_trabajados * @descuento_alimentacion_dia
 
-  def descuento_alimentacion(false, _dias_trabajados), do: 0
+  def descuento_alimentacion(_alimentacion, _dias_trabajados), do: 0
+
+  # ---------------------------------------------------------------------------
+  # Agrupamientos de kilos
+  # ---------------------------------------------------------------------------
 
   @doc """
   Agrupa los kilos de un recolector por día.
 
+  Es la estructura que necesitan las reglas 3 y 4: las claves son los días trabajados y los
+  valores, el total de kilos de ese día.
+
   Ejemplo de salida:
 
-      %{1 => 220, 2 => 150}
+      %{1 => 125, 2 => 90}
   """
   def kilos_por_dia_de_recolector(pesajes_del_recolector) do
     Enum.reduce(pesajes_del_recolector, %{}, fn p, acc ->
@@ -71,7 +123,9 @@ defmodule Liquidacion do
   @doc """
   Agrupa los kilos de toda la finca por día.
 
-  Incluir los 6 días de la cosecha aunque alguno no tenga pesajes, con valor 0.
+  Incluye los 6 días de la cosecha aunque alguno no tenga pesajes, con valor 0 (R3).
+
+      %{1 => 410, 2 => 300.5, 3 => 245, 4 => 0, 5 => 0, 6 => 0}
   """
   def kilos_por_dia_finca(pesajes_validos) do
     base = for dia <- @dias_cosecha, into: %{}, do: {dia, 0}
@@ -89,7 +143,7 @@ defmodule Liquidacion do
 
   La estructura resultante es:
 
-      %{"R01" => 200, "R02" => 120}
+      %{"R01" => 125, "R02" => 145}
   """
   def kilos_por_recolector_en_dia(pesajes_validos, dia) do
     pesajes_validos
@@ -97,7 +151,24 @@ defmodule Liquidacion do
     |> Enum.reduce(%{}, fn p, acc -> Map.update(acc, p.recolector, p.kilos, &(&1 + p.kilos)) end)
   end
 
-  @doc "Calcula la liquidación individual de un recolector en función de sus pesajes."
+  # ---------------------------------------------------------------------------
+  # Regla 5: liquidación
+  # ---------------------------------------------------------------------------
+
+  @doc """
+  Calcula la liquidación individual de un recolector en función de sus pesajes válidos.
+
+  Devuelve un mapa con:
+
+    * `kilos`: total de kilos válidos de la semana.
+    * `suma_pesajes`: suma de `valor_pesaje/2` de cada pesaje (regla 2).
+    * `bonificaciones`: suma de `bonificacion_dia/1` sobre el total de cada día (regla 3).
+    * `alimentacion`: `descuento_alimentacion/2` según los días trabajados (regla 4).
+    * `bruto`: `suma_pesajes + bonificaciones` (lo ganado antes del descuento).
+    * `neto`: `suma_pesajes + bonificaciones - alimentacion` (regla 5).
+
+  Si la lista de pesajes está vacía todos los valores quedan en 0, como pide la regla 5.
+  """
   def liquidar_recolector(recolector, pesajes_validos_del_recolector) do
     kilos_por_dia = kilos_por_dia_de_recolector(pesajes_validos_del_recolector)
 
@@ -112,8 +183,10 @@ defmodule Liquidacion do
       |> Enum.map(&bonificacion_dia/1)
       |> Enum.sum()
 
-    dias_trabajados = kilos_por_dia |> Map.keys() |> length()
-    alimentacion = descuento_alimentacion(recolector.alimentacion, dias_trabajados)
+    dias_trabajados = map_size(kilos_por_dia)
+
+    alimentacion =
+      descuento_alimentacion(Map.get(recolector, :alimentacion), dias_trabajados)
 
     kilos_totales = pesajes_validos_del_recolector |> Enum.map(& &1.kilos) |> Enum.sum()
 
@@ -121,22 +194,36 @@ defmodule Liquidacion do
       codigo: recolector.codigo,
       nombre: recolector.nombre,
       kilos: kilos_totales,
+      dias_trabajados: dias_trabajados,
       suma_pesajes: suma_pesajes,
       bonificaciones: bonificaciones,
       alimentacion: alimentacion,
+      bruto: suma_pesajes + bonificaciones,
       neto: suma_pesajes + bonificaciones - alimentacion
     }
   end
 
-  @doc "Genera la liquidación completa de todos los recolectores disponibles."
+  @doc """
+  Genera la liquidación completa de todos los recolectores, en el orden de `recolectores`.
+
+  Los pesajes se agrupan **una sola vez** por código de recolector con `Enum.group_by/2`,
+  y luego cada recolector toma su grupo con `Map.get/3` (lista vacía si no tiene pesajes,
+  así aparece igual en la liquidación con todo en cero).
+  """
   def liquidar(recolectores, pesajes_validos) do
+    pesajes_por_recolector = Enum.group_by(pesajes_validos, & &1.recolector)
+
     Enum.map(recolectores, fn recolector ->
-      pesajes_del_recolector = Enum.filter(pesajes_validos, &(&1.recolector == recolector.codigo))
-      liquidar_recolector(recolector, pesajes_del_recolector)
+      liquidar_recolector(recolector, Map.get(pesajes_por_recolector, recolector.codigo, []))
     end)
   end
 
-  @doc "Calcula el detalle diario de un recolector: kilos, valor de pesajes y bonificación."
+  @doc """
+  Calcula el detalle diario de un recolector para el desprendible de pago.
+
+  Devuelve una lista ordenada por día con `%{dia:, kilos:, valor_pesajes:, bonificacion:}`.
+  Solo aparecen los días en que el recolector tiene pesajes válidos.
+  """
   def detalle_diario_recolector(pesajes_del_recolector) do
     pesajes_del_recolector
     |> Enum.group_by(& &1.dia)
@@ -156,7 +243,15 @@ defmodule Liquidacion do
     |> Enum.sort_by(& &1.dia)
   end
 
-  @doc "Obtiene el mejor recolector del día según los kilos entregados."
+  # ---------------------------------------------------------------------------
+  # Mejores recolectores (R5)
+  # ---------------------------------------------------------------------------
+
+  @doc """
+  Obtiene el (o los, si hay empate) mejor recolector de un día según los kilos entregados.
+
+  Devuelve `{codigos_ganadores, kilos}` o `:sin_pesajes` si ese día nadie entregó café.
+  """
   def mejores_del_dia(pesajes_validos, dia) do
     case pesajes_validos |> kilos_por_recolector_en_dia(dia) |> Util.maximos_en() do
       :vacio -> :sin_pesajes
@@ -164,14 +259,22 @@ defmodule Liquidacion do
     end
   end
 
-  @doc "Genera el resultado para cada día de la semana con el mejor recolector del día."
+  @doc """
+  Genera un mapa `%{dia => resultado}` con el mejor recolector de cada uno de los 6 días.
+  """
   def mejores_por_dia(pesajes_validos) do
     for dia <- @dias_cosecha, into: %{} do
       {dia, mejores_del_dia(pesajes_validos, dia)}
     end
   end
 
-  @doc "Determina cuál recolector fue el mejor en más días del período."
+  @doc """
+  Determina cuál recolector fue el mejor en más días del período.
+
+  Cuenta cuántas veces aparece cada código como ganador (un empate le suma un día a cada
+  empatado) y devuelve `{codigos, dias}` con todos los que tienen el máximo, o
+  `:sin_ganadores` si ningún día tuvo pesajes.
+  """
   def recolector_con_mas_dias_ganador(mejores_por_dia) do
     conteo =
       mejores_por_dia

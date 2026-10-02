@@ -1,126 +1,107 @@
+# Integrantes: Leandro, Martin, Samuel
+# Programación III - Parcial 1: Liquidación de la cosecha de una finca cafetera
+
 defmodule Util do
   @moduledoc """
-  Utilidades auxiliares para entrada de datos, validaciones, cálculos y formateo.
+  Utilidades de apoyo para el resto del programa.
 
-  Este módulo centraliza operaciones repetitivas usadas en la lógica de negocio, como
-  la lectura desde consola, la validación de valores y el cálculo de promedios.
+  El módulo tiene dos grupos de funciones:
+
+    * **Impuras (con efectos secundarios)**: `leer/2`, `imprimir_mensaje/1` e
+      `imprimir_error/1`. Son las únicas, junto con `Programa`, que tocan la consola.
+    * **Puras**: validaciones numéricas genéricas, formateo de números, cálculo de
+      promedios ponderados, búsqueda de máximos y conversión de listas a mapas.
+
+  Ninguna función de este módulo conoce las reglas de negocio de la finca; solo
+  resuelven tareas genéricas que `Validacion`, `Liquidacion` y `Reportes` reutilizan.
   """
 
+  # ---------------------------------------------------------------------------
+  # Funciones impuras: entrada y salida por consola
+  # ---------------------------------------------------------------------------
+
   @doc """
-  Lee un valor desde consola como texto, eliminando espacios en blanco al inicio y final.
+  Lee una línea desde consola y la devuelve como texto sin espacios al inicio ni al final.
+
+  Si la entrada estándar se cierra (por ejemplo, al ejecutar el programa con un archivo
+  redirigido que ya no tiene más líneas), `IO.gets/1` devuelve `:eof`; en ese caso se
+  devuelve `""` para que el programa continúe como si el usuario hubiera presionado Enter.
+
+  Función **impura**: lee de la entrada estándar.
   """
   def leer(mensaje, :string) do
-    IO.gets(mensaje)
-    |> String.trim()
-  end
-
-  @doc """
-  Lee un valor desde consola y lo convierte a entero.
-
-  Si el valor no es válido, se retorna `0` y se imprime un mensaje de error.
-  """
-  def leer(mensaje, :integer) do
-    leer_con_parser(mensaje, &Integer.parse/1, 0)
-  end
-
-  @doc """
-  Lee un valor desde consola y lo convierte a float.
-
-  Si el valor no es válido, se retorna `0.0` y se imprime un mensaje de error.
-  """
-  def leer(mensaje, :float) do
-    leer_con_parser(mensaje, &Float.parse/1, 0.0)
-  end
-
-  @doc """
-  Ejecuta un parseo sobre el texto ingresado por consola.
-
-  Si falla, usa el valor indicado en `valor_defecto` y registra el error con `imprimir_error/1`.
-  """
-  def leer_con_parser(mensaje, funcion, valor_defecto) do
-    valor =
-      IO.gets(mensaje)
-      |> String.trim()
-      |> funcion.()
-
-    case valor do
-      {numero, _} ->
-        numero
-
-      :error ->
-        imprimir_error("Error. Se utilizará #{valor_defecto} como valor predeterminado.")
-        valor_defecto
+    case IO.gets(mensaje) do
+      texto when is_binary(texto) -> String.trim(texto)
+      _eof_o_error -> ""
     end
   end
 
-  @doc "Imprime un mensaje de error en la salida estándar de errores."
-  def imprimir_error(mensaje) do
-    IO.puts(:standard_error, mensaje)
-  end
+  @doc """
+  Imprime un mensaje en la salida estándar.
 
-  @doc "Imprime un mensaje en la salida estándar."
+  Función **impura**: escribe en consola.
+  """
   def imprimir_mensaje(mensaje) do
     IO.puts(mensaje)
   end
 
-  @doc "Valida que un texto no esté vacío ni compuesto únicamente por espacios."
-  def validar_no_vacio(valor) when is_binary(valor) do
-    if String.trim(valor) == "", do: {:error, :texto_vacio}, else: {:ok, valor}
+  @doc """
+  Imprime un mensaje en la salida estándar de errores.
+
+  Función **impura**: escribe en consola.
+  """
+  def imprimir_error(mensaje) do
+    IO.puts(:standard_error, mensaje)
   end
 
-  @doc "Retorna un error cuando el valor recibido no es un texto."
-  def validar_no_vacio(_), do: {:error, :se_esperaba_texto}
+  # ---------------------------------------------------------------------------
+  # Funciones puras: validaciones numéricas genéricas
+  # ---------------------------------------------------------------------------
 
-  @doc "Valida que un número sea positivo."
+  @doc """
+  Valida que un valor sea un número estrictamente mayor que cero.
+
+  Devuelve `{:ok, numero}` o `{:error, motivo}`. Cualquier valor que no sea número
+  (texto, `nil`, átomo…) cae en la última cláusula y no hace fallar el programa.
+  """
   def validar_positivo(numero) when is_number(numero) and numero > 0, do: {:ok, numero}
   def validar_positivo(numero) when is_number(numero), do: {:error, :debe_ser_positivo}
   def validar_positivo(_), do: {:error, :se_esperaba_un_numero}
 
-  @doc "Valida que un número esté dentro de un rango inclusive."
+  @doc """
+  Valida que un número esté dentro del rango `[minimo, maximo]`, ambos incluidos.
+
+  Devuelve `{:ok, numero}` o `{:error, motivo}`. Si `numero` no es un número o el rango
+  está mal definido, devuelve `{:error, :argumentos_de_rango_invalidos}`.
+  """
   def validar_rango(numero, minimo, maximo)
       when is_number(numero) and is_number(minimo) and is_number(maximo) and minimo <= maximo do
     if numero >= minimo and numero <= maximo, do: {:ok, numero}, else: {:error, :fuera_de_rango}
   end
 
-  @doc "Retorna un error si el rango recibido no es válido."
   def validar_rango(_, _, _), do: {:error, :argumentos_de_rango_invalidos}
 
-  @doc "Valida que un correo tenga formato de dirección de correo electrónico básico."
-  def validar_correo(correo) when is_binary(correo) do
-    patron = ~r/^[^\s@]+@[^\s@]+\.[^\s@]+$/u
+  # ---------------------------------------------------------------------------
+  # Funciones puras: cálculos genéricos
+  # ---------------------------------------------------------------------------
 
-    if Regex.match?(patron, String.trim(correo)),
-      do: {:ok, correo},
-      else: {:error, :correo_invalido}
-  end
+  @doc """
+  Calcula un promedio ponderado a partir de una lista de pares `{valor, peso}`.
 
-  @doc "Retorna un error cuando la entrada no es un texto."
-  def validar_correo(_), do: {:error, :se_esperaba_texto}
+  La fórmula es `suma(valor × peso) / suma(peso)`. Se usa en el reporte R6 para el
+  porcentaje de verdes ponderado por kilos.
 
-  @doc "Calcula el promedio simple de una lista de números."
-  def promedio_lista(lista) when is_list(lista) do
-    cond do
-      lista == [] -> {:error, :lista_vacia}
-      not Enum.all?(lista, &is_number/1) -> {:error, :la_lista_debe_contener_numeros}
-      true -> {:ok, Enum.sum(lista) / length(lista)}
-    end
-  end
+      iex> Util.promedio_ponderado([{1.0, 200}, {15, 10}, {15, 10}])
+      {:ok, 2.272727...}
 
-  @doc "Devuelve un error cuando la entrada no es una lista."
-  def promedio_lista(_), do: {:error, :se_esperaba_una_lista}
-
-  @doc "Calcula un promedio ponderado a partir de pares `{valor, peso}`."
+  Devuelve `{:error, motivo}` si la lista está vacía, si algún par no es válido o si la
+  suma de los pesos es cero (evita la división entre cero).
+  """
   def promedio_ponderado(datos) when is_list(datos) do
     datos_validos =
       Enum.all?(datos, fn
         {valor, peso} -> is_number(valor) and is_number(peso) and peso >= 0
         _ -> false
-      end)
-
-    peso_total =
-      Enum.reduce(datos, 0, fn
-        {_valor, peso}, total when is_number(peso) -> total + peso
-        _, total -> total
       end)
 
     cond do
@@ -130,131 +111,28 @@ defmodule Util do
       not datos_validos ->
         {:error, :se_esperaban_pares_valor_peso_validos}
 
-      peso_total == 0 ->
-        {:error, :el_peso_total_debe_ser_mayor_que_cero}
-
       true ->
-        suma_ponderada =
-          Enum.reduce(datos, 0, fn {valor, peso}, total -> total + valor * peso end)
+        peso_total = datos |> Enum.map(fn {_valor, peso} -> peso end) |> Enum.sum()
+        suma_ponderada = datos |> Enum.map(fn {valor, peso} -> valor * peso end) |> Enum.sum()
 
-        {:ok, suma_ponderada / peso_total}
+        if peso_total == 0,
+          do: {:error, :el_peso_total_debe_ser_mayor_que_cero},
+          else: {:ok, suma_ponderada / peso_total}
     end
   end
 
-  @doc "Devuelve un error si la entrada no es una lista."
   def promedio_ponderado(_), do: {:error, :se_esperaba_una_lista}
 
-  @doc "Calcula el porcentaje indicado sobre un valor dado."
-  def porcentaje(valor, porcentaje) when is_number(valor) and is_number(porcentaje) do
-    {:ok, valor * porcentaje / 100}
-  end
+  @doc """
+  Obtiene las claves que tienen el valor máximo dentro de una colección de pares
+  `{clave, valor}` (por ejemplo, un mapa).
 
-  @doc "Retorna error si los argumentos no son numéricos."
-  def porcentaje(_, _), do: {:error, :argumentos_invalidos}
+  Devuelve `{claves, valor_maximo}` con **todas** las claves empatadas, ordenadas, o
+  `:vacio` si la colección no tiene elementos. Se usa en R5 para los empates.
 
-  @doc "Calcula el área de un rectángulo."
-  def area_rectangulo(base, altura)
-      when is_number(base) and is_number(altura) and base >= 0 and altura >= 0 do
-    {:ok, base * altura}
-  end
-
-  @doc "Valida que las dimensiones del rectángulo sean correctas."
-  def area_rectangulo(_, _), do: {:error, :dimensiones_invalidas}
-
-  @doc "Convierte grados Celsius a Fahrenheit."
-  def celsius_a_fahrenheit(celsius) when is_number(celsius), do: {:ok, celsius * 9 / 5 + 32}
-  def celsius_a_fahrenheit(_), do: {:error, :se_esperaba_un_numero}
-
-  @doc "Convierte grados Fahrenheit a Celsius."
-  def fahrenheit_a_celsius(fahrenheit) when is_number(fahrenheit),
-    do: {:ok, (fahrenheit - 32) * 5 / 9}
-
-  def fahrenheit_a_celsius(_), do: {:error, :se_esperaba_un_numero}
-
-  @doc "Calcula el descuento de un precio según un porcentaje."
-  def calcular_descuento(precio, porcentaje)
-      when is_number(precio) and precio >= 0 and is_number(porcentaje) and porcentaje >= 0 and
-             porcentaje <= 100 do
-    descuento = precio * porcentaje / 100
-    {:ok, %{precio_original: precio, descuento: descuento, total: precio - descuento}}
-  end
-
-  @doc "Error de validación para precio o porcentaje inválidos."
-  def calcular_descuento(_, _), do: {:error, :precio_o_porcentaje_invalido}
-
-  @doc "Calcula el valor final de un precio con impuesto."
-  def calcular_total_con_impuesto(precio, porcentaje)
-      when is_number(precio) and precio >= 0 and is_number(porcentaje) and porcentaje >= 0 and
-             porcentaje <= 100 do
-    impuesto = precio * porcentaje / 100
-    {:ok, %{subtotal: precio, impuesto: impuesto, total: precio + impuesto}}
-  end
-
-  @doc "Error de validación para precio o porcentaje inválidos."
-  def calcular_total_con_impuesto(_, _), do: {:error, :precio_o_porcentaje_invalido}
-
-  @doc "Divide una cuenta entre varias personas, incluyendo propina opcional."
-  def dividir_cuenta(total, personas, propina_porcentaje)
-      when is_number(total) and total >= 0 and is_integer(personas) and personas > 0 and
-             is_number(propina_porcentaje) and propina_porcentaje >= 0 and
-             propina_porcentaje <= 100 do
-    propina = total * propina_porcentaje / 100
-    total_con_propina = total + propina
-
-    {:ok,
-     %{
-       subtotal_por_persona: total / personas,
-       propina_por_persona: propina / personas,
-       total_por_persona: total_con_propina / personas
-     }}
-  end
-
-  @doc "Retorna un error si los datos de la cuenta no son válidos."
-  def dividir_cuenta(_, _, _), do: {:error, :datos_de_cuenta_invalidos}
-
-  @doc "Calcula el monto acumulado con interés compuesto."
-  def interes_compuesto(capital, tasa_anual, anios, capitalizaciones_por_anio)
-      when is_number(capital) and capital > 0 and is_number(tasa_anual) and tasa_anual >= 0 and
-             is_number(anios) and anios >= 0 and is_integer(capitalizaciones_por_anio) and
-             capitalizaciones_por_anio > 0 do
-    tasa = tasa_anual / 100
-
-    monto =
-      capital * :math.pow(1 + tasa / capitalizaciones_por_anio, capitalizaciones_por_anio * anios)
-
-    {:ok, monto}
-  end
-
-  @doc "Validación de argumentos para interés compuesto."
-  def interes_compuesto(_, _, _, _), do: {:error, :parametros_de_interes_invalidos}
-
-  @doc "Calcula la edad entre dos fechas, validando que la fecha de nacimiento no sea futura."
-  def calcular_edad(%Date{} = nacimiento, %Date{} = fecha_actual) do
-    cond do
-      Date.compare(nacimiento, fecha_actual) == :gt -> {:error, :fecha_de_nacimiento_futura}
-      nacimiento.month > fecha_actual.month -> {:ok, fecha_actual.year - nacimiento.year - 1}
-      nacimiento.month < fecha_actual.month -> {:ok, fecha_actual.year - nacimiento.year}
-      nacimiento.day > fecha_actual.day -> {:ok, fecha_actual.year - nacimiento.year - 1}
-      true -> {:ok, fecha_actual.year - nacimiento.year}
-    end
-  end
-
-  @doc "Error cuando alguno de los argumentos no es una fecha válida."
-  def calcular_edad(_, _), do: {:error, :fechas_invalidas}
-
-  @doc "Formatea un número con la cantidad de decimales indicada."
-  def formatear_decimal(valor, decimales)
-      when is_number(valor) and is_integer(decimales) and decimales >= 0 do
-    :erlang.float_to_binary(valor / 1, decimals: decimales)
-  end
-
-  @doc "Error si el valor o la cantidad de decimales no es válida."
-  def formatear_decimal(_, _), do: {:error, :argumentos_invalidos}
-
-  @doc "Formatea un valor monetario con dos decimales."
-  def formatear_dinero(valor), do: formatear_decimal(valor, 2)
-
-  @doc "Obtiene las claves con el valor máximo dentro de un Enumerable de pares."
+      iex> Util.maximos_en(%{"R01" => 130, "R03" => 130, "R02" => 90})
+      {["R01", "R03"], 130}
+  """
   def maximos_en(pares) do
     lista = Enum.to_list(pares)
 
@@ -267,13 +145,75 @@ defmodule Util do
         lista
         |> Enum.filter(fn {_clave, valor} -> valor == valor_maximo end)
         |> Enum.map(fn {clave, _valor} -> clave end)
+        |> Enum.sort()
 
       {claves, valor_maximo}
     end
   end
 
-  @doc "Comprueba si todos los elementos requeridos están presentes en la lista."
+  @doc """
+  Comprueba si todos los elementos de `requeridos` aparecen en `lista`.
+
+  Se usa en R8 para saber si un recolector pasó por todos los lotes.
+  """
   def contiene_todos?(lista, requeridos) do
     Enum.all?(requeridos, &(&1 in lista))
   end
+
+  @doc """
+  Convierte una lista de mapas en un mapa indexado por el campo `clave`.
+
+      iex> Util.indexar_por([%{codigo: "R01", nombre: "Luz"}], :codigo)
+      %{"R01" => %{codigo: "R01", nombre: "Luz"}}
+
+  Permite buscar un recolector por código o un lote por id en tiempo constante, en lugar
+  de recorrer la lista completa cada vez (ver la justificación en la Parte A del README).
+  """
+  def indexar_por(lista, clave) do
+    Map.new(lista, fn elemento -> {Map.get(elemento, clave), elemento} end)
+  end
+
+  # ---------------------------------------------------------------------------
+  # Funciones puras: formateo de números para los reportes
+  # ---------------------------------------------------------------------------
+
+  @doc """
+  Formatea un número con la cantidad de decimales indicada, sin notación científica.
+
+      iex> Util.formatear_decimal(193.6666, 2)
+      "193.67"
+  """
+  def formatear_decimal(valor, decimales)
+      when is_number(valor) and is_integer(decimales) and decimales >= 0 do
+    :erlang.float_to_binary(valor / 1, decimals: decimales)
+  end
+
+  def formatear_decimal(valor, _decimales), do: inspect(valor)
+
+  @doc """
+  Formatea un valor en pesos con dos decimales (por ejemplo `"62999.99999"` → `"63000.00"`).
+  """
+  def formatear_dinero(valor), do: formatear_decimal(valor, 2)
+
+  @doc """
+  Formatea una cantidad de kilos o un porcentaje de forma compacta.
+
+    * Si el número es entero (o un decimal sin parte fraccionaria) se muestra sin decimales:
+      `410` → `"410"`, `92.0` → `"92"`.
+    * Si tiene parte decimal se muestra con hasta dos decimales, sin ceros sobrantes:
+      `300.5` → `"300.5"`, `92.25` → `"92.25"`.
+    * Si no es un número (un dato mal digitado en `datos.exs`) se muestra con `inspect/1`
+      para que el reporte R1 nunca falle.
+  """
+  def formatear_numero(valor) when is_integer(valor), do: Integer.to_string(valor)
+
+  def formatear_numero(valor) when is_float(valor) do
+    if valor == Float.round(valor, 0) do
+      valor |> round() |> Integer.to_string()
+    else
+      :erlang.float_to_binary(valor, [:compact, decimals: 2])
+    end
+  end
+
+  def formatear_numero(valor), do: inspect(valor)
 end
