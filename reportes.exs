@@ -1,30 +1,15 @@
-# Integrantes: Leandro, Martin, Samuel
-# Programación III - Parcial 1: Liquidación de la cosecha de una finca cafetera
-
 defmodule Reportes do
   @moduledoc """
   Construye el texto de los ocho reportes (R1 a R8), el desprendible de pago, el ranking
   con opciones (C.1) y la combinación con la finca vecina (C.2).
 
-  Todas las funciones son **puras**: calculan y **devuelven** un `String` (o un mapa, en
-  `combinar_kilos/2`) sin imprimir nada. Es `Programa.main/0` quien muestra el texto con
-  `Util.imprimir_mensaje/1`.
 
-  Los reportes reciben únicamente pesajes **ya validados** (salvo R1, que recibe los
-  rechazados), de modo que un dato inválido nunca llega a un cálculo.
-  """
-
-  # ---------------------------------------------------------------------------
-  # R1. Pesajes rechazados
-  # ---------------------------------------------------------------------------
-
-  @doc """
-  Reporte R1: lista los pesajes rechazados con su motivo y cuenta los rechazos por motivo.
+  @doc ""Reporte R1: lista los pesajes rechazados con su motivo y cuenta los rechazos por motivo.
 
   Recibe la lista de tuplas `{pesaje, motivo}` que produce `Validacion.separar_pesajes/3`.
   El conteo muestra los cinco motivos en el orden de validación, incluso los que quedaron en 0.
   Se usa `Map.get/2` (y no `pesaje.kilos`) para que un pesaje al que le falte un campo no
-  haga fallar el reporte.
+  haga fallar el reporte."
   """
   def r1(rechazados) do
     lineas_pesajes =
@@ -44,7 +29,8 @@ defmodule Reportes do
           end)
       end
 
-    conteos = rechazados |> Enum.map(fn {_pesaje, motivo} -> motivo end) |> Enum.frequencies()
+    conteos = rechazados |> Enum.map(fn {_pesaje, motivo} -> motivo end)
+    |> Enum.frequencies()
 
     lineas_conteo =
       Enum.map(Validacion.motivos(), fn motivo ->
@@ -58,16 +44,9 @@ defmodule Reportes do
     )
   end
 
-  # ---------------------------------------------------------------------------
-  # R2. Kilos por lote
-  # ---------------------------------------------------------------------------
-
   @doc """
   Calcula los kilos y el rendimiento (kg/ha) de cada lote, ordenados de mayor a menor
   rendimiento. Un lote sin pesajes válidos aparece con 0 kg.
-
-  Devuelve una lista de mapas `%{nombre:, hectareas:, kilos:, rendimiento:}`. Si un lote
-  tuviera 0 hectáreas su rendimiento queda en 0 para no dividir entre cero.
   """
   def kilos_por_lote(pesajes_validos, lotes) do
     kilos_por_id =
@@ -98,10 +77,6 @@ defmodule Reportes do
 
     Enum.join(["R2. Kilos por lote" | lineas], "\n")
   end
-
-  # ---------------------------------------------------------------------------
-  # R3. Kilos por día
-  # ---------------------------------------------------------------------------
 
   @doc """
   Reporte R3: compara la producción diaria de la finca con la meta establecida.
@@ -139,15 +114,9 @@ defmodule Reportes do
     )
   end
 
-  # ---------------------------------------------------------------------------
-  # R4. Liquidación de la semana
-  # ---------------------------------------------------------------------------
-
   @doc """
   Reporte R4: liquidación de todos los recolectores, numerada y ordenada por neto de mayor
   a menor. Los valores en pesos van con dos decimales y sin notación científica.
-
-  `Enum.with_index(1)` agrega la posición (empezando en 1) a cada liquidación ya ordenada.
   """
   def r4(liquidaciones) do
     lineas =
@@ -169,15 +138,8 @@ defmodule Reportes do
     )
   end
 
-  # ---------------------------------------------------------------------------
-  # R5. Mejor recolector de cada día
-  # ---------------------------------------------------------------------------
-
   @doc """
   Reporte R5: muestra el mejor recolector de cada día y resume quién ganó más días.
-
-  Si hay empate se listan todos los empatados separados por coma, por ejemplo:
-  `Día 4: Luz Marina Ospina, Dora Cardona (130 kg)`.
   """
   def r5(pesajes_validos, recolectores_por_codigo) do
     mejores = Liquidacion.mejores_por_dia(pesajes_validos)
@@ -207,20 +169,11 @@ defmodule Reportes do
     Enum.join(["R5. Mejor recolector de cada día"] ++ lineas ++ [resumen], "\n")
   end
 
-  # ---------------------------------------------------------------------------
-  # R6. Mejor calidad
-  # ---------------------------------------------------------------------------
-
   @minimo_pesajes_r6 3
 
   @doc """
   Calcula el porcentaje de verdes **ponderado por kilos** de cada recolector que tenga al
   menos 3 pesajes válidos:
-
-      ponderado = suma(verdes × kilos) / suma(kilos)
-
-  Devuelve una lista de tuplas `{codigo, ponderado}`. La ponderación hace que un pesaje
-  grande pese más que uno pequeño (ver la explicación en el README).
   """
   def calidad_ponderada(pesajes_validos) do
     pesajes_validos
@@ -235,9 +188,6 @@ defmodule Reportes do
   @doc """
   Reporte R6: recolector con mejor calidad (menor porcentaje de verdes ponderado por kilos)
   entre quienes tienen al menos 3 pesajes válidos. Si hay empate se muestran todos.
-
-  Para reutilizar `Util.maximos_en/1` (que busca el máximo) se usa el valor negativo del
-  porcentaje: el menor porcentaje es el mayor de sus negativos.
   """
   def r6(pesajes_validos, recolectores_por_codigo) do
     titulo = "R6. Mejor calidad (mínimo #{@minimo_pesajes_r6} pesajes válidos)"
@@ -253,10 +203,6 @@ defmodule Reportes do
           "#{Util.formatear_decimal(-negativo, 2)} % de verdes ponderado por kilos"
     end
   end
-
-  # ---------------------------------------------------------------------------
-  # R7. Totales de la semana
-  # ---------------------------------------------------------------------------
 
   @doc """
   Reporte R7: total que paga la finca (suma de los netos) y costo promedio por kilo
@@ -278,16 +224,8 @@ defmodule Reportes do
     )
   end
 
-  # ---------------------------------------------------------------------------
-  # R8. Recolectores en todos los lotes
-  # ---------------------------------------------------------------------------
-
   @doc """
   Reporte R8: recolectores que recogieron café (con pesajes válidos) en **todos** los lotes.
-
-  Para cada recolector se obtiene la lista de lotes donde trabajó y se compara con la lista
-  de ids de todos los lotes usando `Util.contiene_todos?/2`. Se respeta el orden de
-  `recolectores`. Si no hay ninguno se muestra un mensaje que lo indica.
   """
   def r8(pesajes_validos, recolectores, lotes) do
     ids_lotes = Enum.map(lotes, & &1.id)
@@ -306,15 +244,9 @@ defmodule Reportes do
     Enum.join(["R8. Recolectores que trabajaron en todos los lotes" | lineas], "\n")
   end
 
-  # ---------------------------------------------------------------------------
-  # B.5. Desprendible de pago
-  # ---------------------------------------------------------------------------
-
   @doc """
   Construye el desprendible de pago de un recolector: detalle por día (kilos, valor de los
   pesajes y bonificación), suma de pesajes, bonificaciones, alimentación y neto.
-
-  Solo aparecen los días en que el recolector tiene pesajes válidos.
   """
   def desprendible(recolector, pesajes_validos) do
     pesajes_del_recolector = Enum.filter(pesajes_validos, &(&1.recolector == recolector.codigo))
@@ -349,29 +281,11 @@ defmodule Reportes do
     )
   end
 
-  # ---------------------------------------------------------------------------
-  # C.1. Ranking con keyword list de opciones
-  # ---------------------------------------------------------------------------
-
   @campos_ranking [:neto, :kilos, :bruto]
   @ordenes_ranking [:desc, :asc]
 
   @doc """
-  Ranking de liquidaciones configurable con una keyword list de opciones:
-
-  | Opción   | Valores posibles            | Valor por defecto        |
-  |----------|-----------------------------|--------------------------|
-  | `campo`  | `:neto`, `:kilos`, `:bruto` | `:neto`                  |
-  | `orden`  | `:desc`, `:asc`             | `:desc`                  |
-  | `limite` | un entero positivo          | todos los recolectores   |
-
-  Cada opción se lee con `Keyword.get/3`, que devuelve el valor por defecto si la opción
-  no viene. Si una opción trae un valor no permitido, también se usa el valor por defecto.
-
-  `Keyword.get/3` devuelve la **primera** aparición de la clave; por eso
-  `ranking(liquidaciones, campo: :kilos, campo: :neto)` ordena por `:kilos`.
-
-  `:bruto` es lo devengado antes del descuento de alimentación (pesajes + bonificaciones).
+  Ranking de liquidaciones configurable con una keyword.
   """
   def ranking(liquidaciones, opciones) do
     campo = valor_permitido(Keyword.get(opciones, :campo, :neto), @campos_ranking, :neto)
@@ -406,19 +320,8 @@ defmodule Reportes do
   defp formatear_campo(:kilos, valor), do: "#{Util.formatear_numero(valor)} kg"
   defp formatear_campo(_campo_en_pesos, valor), do: "$#{Util.formatear_dinero(valor)}"
 
-  # ---------------------------------------------------------------------------
-  # C.2. Combinar la producción con la finca vecina
-  # ---------------------------------------------------------------------------
-
   @doc """
   Combina el mapa de kilos por día de la finca (el de R3) con el de una finca vecina.
-
-  Se usa `Map.merge/3`: cuando un día está en los dos mapas, la función recibe
-  `(dia, kilos_finca, kilos_vecina)` y devuelve la suma. Los días que están en un solo
-  mapa (como el día 7 de la vecina, o los días 4 y 6 de la finca) se copian sin cambios.
-
-      iex> Reportes.combinar_kilos(%{1 => 410, 4 => 0}, %{1 => 520.5, 7 => 300})
-      %{1 => 930.5, 4 => 0, 7 => 300}
   """
   def combinar_kilos(mapa_finca, mapa_vecina) do
     Map.merge(mapa_finca, mapa_vecina, fn _dia, kilos_finca, kilos_vecina ->
@@ -437,10 +340,6 @@ defmodule Reportes do
 
     Enum.join(["C.2. Producción combinada con la finca vecina" | lineas], "\n")
   end
-
-  # ---------------------------------------------------------------------------
-  # Funciones auxiliares privadas
-  # ---------------------------------------------------------------------------
 
   defp si_no(true), do: "Sí"
   defp si_no(false), do: "No"
